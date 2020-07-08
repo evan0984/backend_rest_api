@@ -45,9 +45,12 @@ class Chat extends \yii\db\ActiveRecord
     //create new message
     public static function addMessage($request)
     {   
+<<<<<<< HEAD
         if(!$request->post('send_to')){
             throw new \yii\web\HttpException('500','send_to cannot be blank.'); 
         }
+=======
+>>>>>>> 0da959ceb0463e4e3a481c40691b5f0a2a071ac1
         $chat_id = (int)$request->post('chat_id');
         if (!$chat_id) {
             $chat = new Chat();

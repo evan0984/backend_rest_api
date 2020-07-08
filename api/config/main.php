@@ -93,9 +93,12 @@ return [
                 'send-msg' => 'chat/send-message',
                 'update-msg' => 'chat/update-message',
                 'delete-msg' => 'chat/delete-message',
+<<<<<<< HEAD
                 'send-like' => 'like/send-like',
                 'get-match' => 'like/get-match',
                 'swipe' => 'like/swipe',
+=======
+>>>>>>> 0da959ceb0463e4e3a481c40691b5f0a2a071ac1
             ],
         ],
     ],
