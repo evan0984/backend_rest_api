@@ -43,7 +43,7 @@ class Message extends \yii\db\ActiveRecord
             'id' => 'id',
             'chat_id' => 'chat_id',   
             'user' => 'user_info', 
-            //'status' => 'status',
+            'status' => 'status',
             'text' => 'text',  
             'image' => 'image',
             'created_at' => 'created_at',
@@ -52,7 +52,7 @@ class Message extends \yii\db\ActiveRecord
 
     public function getUser_info()
     {
-        return User::find()->select('id, username, first_name, last_name, image')->where(['id'=>$this->user_id])->one();
+        return UserMsg::find()->where(['id'=>$this->user_id])->one();
     }
 
 
