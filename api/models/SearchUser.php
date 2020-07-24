@@ -8,9 +8,9 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 use common\models\Token;
+use api\models\SearchUserPpl;
 
-
-class UserMsg extends ActiveRecord
+class SearchUser extends ActiveRecord
 {
     const STATUS_NOT_ACTIVE = 0;
     const STATUS_ACTIVE = 1;
@@ -54,7 +54,7 @@ class UserMsg extends ActiveRecord
     public function fields()
     {
         return [
-            '_id' => 'id',
+            'id' => 'id',
             'name' => 'username',   
             //'token' => 'token', 
             'first_name' => 'first_name',
@@ -75,10 +75,22 @@ class UserMsg extends ActiveRecord
     }
 
     public function getSearch($request)
-    {
-        return UserMsg::find()->where(['like', 'username', $request])
+    {   
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("SELECT `user`.`id` FROM `friend` l1 
+            INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
+            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            WHERE l1.user_source_id = ".\Yii::$app->user->id);
+        $result = $command->queryAll();
+        $ar = [];
+        foreach ($result as $key => $value) {
+            array_push($ar, $value['id']);
+        }
+        return SearchUserPpl::find()->where(['like', 'username', $request])
         ->orwhere(['like', 'first_name', $request])
         ->orwhere(['like', 'last_name', $request])
+        ->andWhere(['<>','id', \Yii::$app->user->id])
+        ->andWhere(['not in', 'id', $ar])
          ->all();
         
     }

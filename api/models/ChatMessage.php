@@ -6,7 +6,7 @@ use Yii;
 use api\models\Chat;
 use api\models\Party;
 use api\models\Message;
-
+use yii\helpers\ArrayHelper;
 /**
  * This is the model class for table "chat".
  *
@@ -25,9 +25,22 @@ class ChatMessage extends \yii\db\ActiveRecord
     }
 
 
-    public static function getChatMessage()
+    public static function getCurrentChat($request)
+    {  
+        if(!$request->post('chat_id')){
+            throw new \yii\web\HttpException('500','chat_id cannot be blank.'); 
+        }
+        $chats = Party::find()->where(['chat_id'=>$request->post('chat_id'), 'user_id'=>\Yii::$app->user->id])->one();
+        if(!$chats){
+            throw new \yii\web\HttpException('500','You not have this chat_id'); 
+        }
+        $result = ChatMessage::find()->select('chat_id')->where(['chat_id'=>$request->post('chat_id')])->one();
+        return $result;
+    }
+
+    public static function getChatMessage($id)
     {   
-        $result = ChatMessage::find()->select('chat_id')->where(['user_id'=>\Yii::$app->user->id])->distinct()->all();
+        $result = ChatMessage::find()->select('chat_id')->where(['user_id'=>$id])->distinct()->all();
         return $result;
     }
 
@@ -36,9 +49,15 @@ class ChatMessage extends \yii\db\ActiveRecord
         return [
             'chat_id' => 'chat_id',
             'messages' => 'message_tbl',
+            'partner_info' => 'partner_info',
         ];
     }
 
+    public function getPartner_info()
+    { 
+        $party = Party::find()->where(['chat_id'=>$this->chat_id])->andWhere(['<>','user_id', \Yii::$app->user->id])->one();
+        return UserMsg::find()->where(['id'=>$party->user_id])->one();
+    }
 
     public function getMessage_tbl()
     {   

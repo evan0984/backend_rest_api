@@ -28,7 +28,18 @@ class LikeController extends Controller
 
     public function actionSendLike() {
         $request = Yii::$app->request;
-        return Like::sendLike($request);
+        $user_target_id = (int)$request->post('user_target_id');
+        $is_like = (int)$request->post('is_like');
+        return
+        [
+            'last_like_data' => Like::sendLike($user_target_id, $is_like),
+            'like_info' => Like::getLikeInfo(),
+        ];
+    }
+
+    public function actionSendLikeAll() {
+        $request = Yii::$app->request;
+        return Like::sendLikeAll($request);
     }
 
     public function actionGetMatch() {

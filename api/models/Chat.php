@@ -6,7 +6,9 @@ use Yii;
 use api\models\Chat;
 use api\models\Party;
 use api\models\Message;
-
+use api\models\UserMsg;
+use api\models\ChatMessage;
+use yii\helpers\ArrayHelper;
 /**
  * This is the model class for table "chat".
  *
@@ -35,6 +37,26 @@ class Chat extends \yii\db\ActiveRecord
         ];
     }
 
+    public static function getChatUser($request)
+    {   
+        $user_target_id = (int)$request->post('user_target_id');
+        if(!$user_target_id){
+            throw new \yii\web\HttpException('500','user_target_id cannot be blank.'); 
+        }
+        if($user_target_id == \Yii::$app->user->id){
+            throw new \yii\web\HttpException('500','user_target_id = your id.'); 
+        }
+        $id = \Yii::$app->user->id;
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("
+            SELECT * FROM `party` WHERE `party`.`chat_id` IN (SELECT `chat_id` FROM `party` WHERE `party`.`user_id` = ".\Yii::$app->user->id.") 
+            AND `party`.`user_id` = ".$user_target_id);
+        $result = $command->queryAll();
+        return [
+            'chat_id' => $result[0]['chat_id']
+        ];
+    }
+
     //return all chats for auth user
     public static function getChat()
     {   
@@ -42,15 +64,29 @@ class Chat extends \yii\db\ActiveRecord
         return $result;
     }
 
+    public function getSearch($request)
+    {   
+        $my_chats = Party::find()->select('chat_id')->where(['user_id'=>\Yii::$app->user->id])->distinct()->all();
+        $array = [];
+        foreach ($my_chats as $key => $value) {
+            array_push($array, $value['chat_id']);
+        }
+        $array = implode("','",$array);
+        $id = \Yii::$app->user->id;
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("SELECT ".User::userFields().", `message`.`text`, `message`.`chat_id`, `message`.`created_at` FROM `message`
+            LEFT JOIN `user` ON `user`.`id` = `message`.`user_id`
+            WHERE `message`.`user_id` <> ".\Yii::$app->user->id." AND `message`.`text` Like '%".$request."%' AND `message`.`chat_id` IN ('".$array."')");
+        $result = $command->queryAll();
+        return $result;
+    }
+
     //create new message
     public static function addMessage($request)
     {   
-<<<<<<< HEAD
         if(!$request->post('send_to')){
             throw new \yii\web\HttpException('500','send_to cannot be blank.'); 
         }
-=======
->>>>>>> 0da959ceb0463e4e3a481c40691b5f0a2a071ac1
         $chat_id = (int)$request->post('chat_id');
         if (!$chat_id) {
             $chat = new Chat();
@@ -101,16 +137,26 @@ class Chat extends \yii\db\ActiveRecord
                                 fclose($putdata);
             $message->image = \yii\helpers\Url::to(['/chat'], true).'/'.$photoname;
         }
-
         $message->save();
-
-
-        return Chat::getMessagers($message->chat_id);
+        $result = Chat::getMessagers($message->chat_id);
+        User::socket($request->post('send_to'), (array)$result, 'Chat');
+        return $result;
     }
 
     public static function getMessagers($chat_id)
-    { 
-        return Message::find()->where(['chat_id'=>$chat_id])->orderby('created_at DESC')->all();
+    {   
+        $result = Message::find()->where(['chat_id'=>$chat_id])->orderby('created_at DESC')->all();
+        $result = ArrayHelper::toArray($result, [
+            'api\models\Message' => [
+                'id',
+                'text',
+                'created_at',
+                'image',
+                'chat_id',
+                'user' => 'user_info',
+            ],
+        ]);
+        return $result;
     }
 
     public static function updateMessage($request)
@@ -135,11 +181,11 @@ class Chat extends \yii\db\ActiveRecord
             if ($msg->save()) {
                 return Message::find()->where(['chat_id'=>$msg->chat_id])->orderby('created_at DESC')->all();
             } else {
-                throw new ServerErrorHttpException('Error save message!');
+                throw new \yii\web\HttpException('500', 'Error save message!');
             }
             
         } else {
-            throw new ServerErrorHttpException('Message with id = '.$request->post('message_id').' not exist');
+            throw new \yii\web\HttpException('500', 'Message with id = '.$request->post('message_id').' not exist');
         }
     }
 
@@ -157,7 +203,7 @@ class Chat extends \yii\db\ActiveRecord
             ->execute();
             return Message::find()->where(['chat_id'=>$msg->chat_id])->orderby('created_at DESC')->all();
         } else {
-            throw new ServerErrorHttpException('Message with id = '.$request->post('message_id').' not exist');
+            throw new \yii\web\HttpException('500', 'Message with id = '.$request->post('message_id').' not exist');
         }
     }
 
@@ -175,7 +221,7 @@ class Chat extends \yii\db\ActiveRecord
             ->execute();
             return ["result"=>'Deleted'];
         } else {
-            throw new ServerErrorHttpException('Message with id = '.$request->post('message_id').' not exist');
+            throw new \yii\web\HttpException('500', 'Message with id = '.$request->post('message_id').' not exist');
         }
     }
 

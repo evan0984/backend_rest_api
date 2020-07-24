@@ -93,12 +93,18 @@ class User extends ActiveRecord implements IdentityInterface
      * @inheritdoc
      */
     public static function findIdentityByAccessToken($token, $type = null)
-    {
-        return static::find()
+    {   
+        $result = static::find()
             ->joinWith('tokens t')
             ->andWhere(['t.token' => $token])
             ->andWhere(['>', 't.expired_at', time()])
             ->one();
+        if($result){
+            $query = "UPDATE `user` SET `last_activity`=".time()." WHERE `id`=".$result->id;
+            $connection = Yii::$app->getDb();
+            $command = $connection->createCommand($query)->execute();
+        }
+        return $result;
     }
 
     /**
@@ -177,6 +183,7 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             [['username', 'email'], 'unique'],
             ['status', 'integer'],
+            [['address'], 'safe'],
             
             [['username'], 'filter', 'filter' => '\yii\helpers\Html::encode']
         ];

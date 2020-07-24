@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'oauth_client',
             //'oauth_client_user_id',
             //'email:email',
-            //'status',
+            'address',
             'created_at:date',
             //'updated_at',
             'birthday',

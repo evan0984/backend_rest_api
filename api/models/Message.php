@@ -40,27 +40,37 @@ class Message extends \yii\db\ActiveRecord
     public function fields()
     {
         return [
-            'id' => 'id',
+            '_id' => 'id',
             'chat_id' => 'chat_id',   
             'user' => 'user_info', 
-<<<<<<< HEAD
             'status' => 'status',
-=======
-            //'status' => 'status',
->>>>>>> 0da959ceb0463e4e3a481c40691b5f0a2a071ac1
             'text' => 'text',  
             'image' => 'image',
-            'created_at' => 'created_at',
+            'createdAt' => 'created_at',
         ];
     }
 
+    public function readMessage($request)
+    {   
+        $mess_id = (array)$request->post('message_id');
+        if(count($mess_id) < 1){
+            throw new \yii\web\HttpException('500','array lenght of message_id cannot < 1'); 
+        }
+        foreach ($mess_id as $key => $value) {
+            $message = Message::find()->where(['id'=>$value])->one();
+            if ($message) {
+                $message->status = 1;
+                $message->save();
+            }
+        }
+        return ['read-messages'=>$mess_id];
+        
+    }
+    
+
     public function getUser_info()
     {
-<<<<<<< HEAD
         return UserMsg::find()->where(['id'=>$this->user_id])->one();
-=======
-        return User::find()->select('id, username, first_name, last_name, image')->where(['id'=>$this->user_id])->one();
->>>>>>> 0da959ceb0463e4e3a481c40691b5f0a2a071ac1
     }
 
 

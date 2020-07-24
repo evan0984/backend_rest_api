@@ -22,6 +22,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'phone')->textInput() ?>
 
+    <?= $form->field($model, 'address')->textInput() ?>
+
     <?= $form->field($model, 'first_name')->textInput() ?>
 
     <?= $form->field($model, 'last_name')->textInput() ?>

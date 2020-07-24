@@ -37,8 +37,23 @@ class ChatController extends Controller
         return Chat::deleteChat($request);
     }
 
+    public function actionGetChatUser() {
+        $request = Yii::$app->request;
+        return Chat::getChatUser($request);
+    }
+    public function actionGetCurrentChat() {
+        $request = Yii::$app->request;
+        return ChatMessage::getCurrentChat($request);
+    }
+
+    public function actionReadMessage() {
+        $request = Yii::$app->request;
+        return Message::readMessage($request);
+    }
+
     public function actionChatMessage() {
-        return ChatMessage::getChatMessage();
+        $id = \Yii::$app->user->id;
+        return ChatMessage::getChatMessage($id);
     }
 
     public function actionSendMessage() {

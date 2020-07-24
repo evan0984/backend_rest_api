@@ -10,7 +10,7 @@ use yii\web\IdentityInterface;
 use common\models\Token;
 
 
-class UserMsg extends ActiveRecord
+class SearchUserPpl extends ActiveRecord
 {
     const STATUS_NOT_ACTIVE = 0;
     const STATUS_ACTIVE = 1;
@@ -54,8 +54,8 @@ class UserMsg extends ActiveRecord
     public function fields()
     {
         return [
-            '_id' => 'id',
-            'name' => 'username',   
+            'id' => 'id',
+            'username' => 'username',   
             //'token' => 'token', 
             'first_name' => 'first_name',
             'last_name' => 'last_name',  
@@ -70,8 +70,19 @@ class UserMsg extends ActiveRecord
             'last_activity'=>'last_activity',
             'premium'=>'premium',
             'bio'=>'bio',
-            'images'=>'images'
+            'images'=>'images',
+            'friend'=>'friend',
         ];
+    }
+
+    public function getFriend()
+    {  
+        $request = Friend::find()->where(['user_source_id'=>\Yii::$app->user->id, 'user_target_id'=>$this->id])->one();
+        if ($request) {
+            return 2;
+        } else {
+            return 1;
+        }
     }
 
     public function getSearch($request)

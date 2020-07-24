@@ -1,8 +1,8 @@
 <?php
 
 error_reporting('NULL');
-defined('YII_DEBUG') or define('YII_DEBUG', true);
-defined('YII_ENV') or define('YII_ENV', 'dev');
+//defined('YII_DEBUG') or define('YII_DEBUG', true);
+//defined('YII_ENV') or define('YII_ENV', 'dev');
 
 // Composer
 require(__DIR__ . '/../../vendor/autoload.php');

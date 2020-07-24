@@ -35,11 +35,31 @@ class Like extends \yii\db\ActiveRecord
         ];
     }
 
-
-    public function sendLike($request)
+    public function sendLikeAll($request)
     {   
-        $user_target_id = (int)$request->post('user_target_id');
+        $result = [];
         $is_like = (int)$request->post('is_like');
+        $user_target_id = (array)$request->post('user_target_id');
+        if (count($user_target_id) < 1) {
+            throw new \yii\web\HttpException('500','user_target_id cannot be blank.'); 
+        }
+        if(!isset($is_like)){
+            throw new \yii\web\HttpException('500','is_like cannot be blank.'); 
+        }
+        foreach ($user_target_id as $key => $value) {
+            $like = Like::sendLike((int)$value, $is_like);
+            array_push($result, $like);
+        }
+
+        return
+        [
+            'result' => $result,
+            'like_info' => Like::getLikeInfo(),
+        ];
+    }
+
+    public function sendLike($user_target_id, $is_like)
+    {           
         if(!$user_target_id){
             throw new \yii\web\HttpException('500','user_target_id cannot be blank.'); 
         }
@@ -66,16 +86,45 @@ class Like extends \yii\db\ActiveRecord
         return $like;
     }
 
+    public function getLikeInfo()
+    {
+        $dis = 0;
+        $like = 0;
+        $super = 0;
+        $likes = Like::find()->where(['user_source_id'=>\Yii::$app->user->id])->all();
+        foreach ($likes as $key => $value) {
+            if ($value['like'] == 0) {
+                $dis++;
+            }
+            if ($value['like'] == 1) {
+                $like++;
+            }
+            if ($value['like'] == 2) {
+                $super++;
+            }
+        }
+        return [
+            'dislike' => $dis,
+            'like' => $like,
+            'superlike' => $super
+        ];
+    }
+
     public function getMatch()
     {
         $id = \Yii::$app->user->id;
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand("SELECT l2.user_source_id, `user`.`username`, `user`.`phone`, `user`.`image`, `user`.`gender`, `user`.`birthday`, `user`.`status`, `user`.`first_name`, `user`.`last_name` FROM `like` l1 
+        $command = $connection->createCommand("SELECT l2.user_source_id, ".User::userFields()." FROM `like` l1 
             INNER JOIN `like` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
             LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".\Yii::$app->user->id." AND (l1.like = 1 OR l2.like = 1 OR l2.like = 2 OR l2.like = 2)  AND (l1.like <> 0 AND l2.like <> 0)");
         $result = $command->queryAll();
-        return $result;        
+        return 
+        [            
+            'result' => $result,
+            'like_info' => Like::getLikeInfo(),
+        ]; 
+
     }
 
     public function swipe()
@@ -88,8 +137,15 @@ class Like extends \yii\db\ActiveRecord
         $swipe = User::find()
         ->where(['<>','id', \Yii::$app->user->id])
         ->andWhere(['not in', 'id', $ar])
+        ->orderBy([
+        'id' => SORT_DESC     
+        ])
         ->all();  
-        return $swipe;
+        return 
+        [    
+            'swipe' => $swipe,
+            'like_info' => Like::getLikeInfo(),
+        ];
     }
 
 
