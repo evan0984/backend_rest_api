@@ -127,15 +127,10 @@ class Chat extends \yii\db\ActiveRecord
 
         //image
         if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
-            $putdata = fopen($_FILES['image']['tmp_name'], "r");
-            $photoname = uniqid().'.jpg';
-            $filename = \Yii::getAlias('@webroot') . '/chat/'. $photoname;
-            $fp = fopen($filename, "w");
-                                while ($data = fread($putdata, 1024))
-                                fwrite($fp, $data);       
-                                fclose($fp);
-                                fclose($putdata);
-            $message->image = \yii\helpers\Url::to(['/chat'], true).'/'.$photoname;
+            $file_name = uniqid().'.jpg';   
+            $temp_file_location = $_FILES['image']['tmp_name']; 
+            User::s3Upload('user/', $file_name, $temp_file_location);
+            $message->image = env('AWS_S3_PLUZO').'user/'.$file_name;
         }
         $message->save();
         $result = Chat::getMessagers($message->chat_id);
@@ -168,15 +163,10 @@ class Chat extends \yii\db\ActiveRecord
         if ($msg) {
             if ($request->post('text')) { $msg->text = $request->post('text'); }
             if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
-            $putdata = fopen($_FILES['image']['tmp_name'], "r");
-            $photoname = uniqid().'.jpg';
-            $filename = \Yii::getAlias('@webroot') . '/chat/'. $photoname;
-            $fp = fopen($filename, "w");
-                                while ($data = fread($putdata, 1024))
-                                fwrite($fp, $data);       
-                                fclose($fp);
-                                fclose($putdata);
-            $msg->image = \yii\helpers\Url::to(['/chat'], true).'/'.$photoname;
+                $file_name = uniqid().'.jpg';   
+                $temp_file_location = $_FILES['image']['tmp_name']; 
+                User::s3Upload('user/', $file_name, $temp_file_location);
+                $msg->image = env('AWS_S3_PLUZO').'user/'.$file_name;
             }
             if ($msg->save()) {
                 return Message::find()->where(['chat_id'=>$msg->chat_id])->orderby('created_at DESC')->all();

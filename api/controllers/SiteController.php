@@ -14,8 +14,6 @@ use api\models\Chat;
 use common\models\Token;
 use yii\filters\auth\HttpBearerAuth;
 use yii\helpers\Url;
-use Aws\S3\S3Client;  
-use Aws\Exception\AwsException;
 
 class SiteController extends Controller
 {   
@@ -26,7 +24,7 @@ class SiteController extends Controller
 
         $behaviors['authenticator'] = [
             'class' =>  HttpBearerAuth::className(),
-            'except' => ['index','sms', 'login', 'signup', 'forgot-sms-send', 'forgot-sms-code', 'new-pass-code', 'verify-sms-send', 'verify-sms-code', 'login-sms-send', 'login-sms-code']
+            'except' => ['sms', 'login', 'signup', 'forgot-sms-send', 'forgot-sms-code', 'new-pass-code', 'verify-sms-send', 'verify-sms-code', 'login-sms-send', 'login-sms-code']
         ];
 
         return $behaviors;
@@ -228,23 +226,7 @@ class SiteController extends Controller
     
 
     public function actionIndex()
-    {   
-        $s3Client = new S3Client([
-    //'profile' => 'default',
-    'region' => 'us-east-2',
-    'version' => '2006-03-01',
-    'credentials' => [
-            'key'    => 'AKIARQV6Y3IO6M6PO4FQ',
-            'secret' => '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',
-        ],
-]);
-
-//Listing all S3 Bucket
-$buckets = $s3Client->listBuckets();
-foreach ($buckets['Buckets'] as $bucket) {
-    echo $bucket['Name'] . "\n";
-}
-die();
+    {
         return 'api';
     }
 
@@ -265,12 +247,10 @@ die();
         return User::find()->where(['id'=>\Yii::$app->user->id])->one();
     }
 
-    
-
     public function actionUpdate()
     {
         $user = User::find()->where(['id'=>\Yii::$app->user->id])->one();
-        $model->scenario = 'update';
+        //$model->scenario = 'update';
 
         if (isset($_POST['latitude'])) { $user->latitude = $_POST['latitude']; }
         if (isset($_POST['longitude'])) { $user->longitude = $_POST['longitude']; }
@@ -283,16 +263,10 @@ die();
         if (isset($_POST['last_name'])) { $user->last_name = $_POST['last_name']; }
         if (isset($_POST['password'])) { $user->password_hash = Yii::$app->security->generatePasswordHash($_POST['password']); }
         if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
-            
-            $putdata = fopen($_FILES['image']['tmp_name'], "r");
-            $photoname = uniqid().'.jpg';
-            $filename = \Yii::getAlias('@webroot') . '/uploads/'. $photoname;
-            $fp = fopen($filename, "w");
-                                while ($data = fread($putdata, 1024))
-                                fwrite($fp, $data);       
-                                fclose($fp);
-                                fclose($putdata);
-            $user->image = \yii\helpers\Url::to(['/uploads'], true).'/'.$photoname;
+            $file_name = uniqid().'.jpg';   
+            $temp_file_location = $_FILES['image']['tmp_name']; 
+            User::s3Upload('user/', $file_name, $temp_file_location);
+            $user->image = env('AWS_S3_PLUZO').'user/'.$file_name;
         }
 
         if( count($_FILES['images'])>0 AND $_FILES['images']['tmp_name'] ) {
@@ -333,19 +307,12 @@ die();
             $model->address = User::getAddress($lat, $long);
         }
         $model->premium = User::NOT_PREMIUM;
-
         if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
-            $putdata = fopen($_FILES['image']['tmp_name'], "r");
-            $photoname = uniqid().'.jpg';
-            $filename = \Yii::getAlias('@webroot') . '/uploads/'. $photoname;
-            $fp = fopen($filename, "w");
-                                while ($data = fread($putdata, 1024))
-                                fwrite($fp, $data);       
-                                fclose($fp);
-                                fclose($putdata);
-            $model->image = \yii\helpers\Url::to(['/uploads'], true).'/'.$photoname;
+            $file_name = uniqid().'.jpg';   
+            $temp_file_location = $_FILES['image']['tmp_name']; 
+            User::s3Upload('user/', $file_name, $temp_file_location);
+            $user->image = env('AWS_S3_PLUZO').'user/'.$file_name;
         }
-        
         if ($model->save()) {
             
             $token = new Token();

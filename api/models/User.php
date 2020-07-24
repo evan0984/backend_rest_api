@@ -11,6 +11,7 @@ use common\models\Token;
 use WebSocket\Client;
 use Aws\Sns\SnsClient; 
 use Aws\Exception\AwsException;
+use Aws\S3\S3Client;
 
 class User extends ActiveRecord
 {
@@ -82,26 +83,17 @@ class User extends ActiveRecord
     public function savePhoto($image)
     {   
         for ($i=0; $i < count($image['name']); $i++) { 
-            $putdata = fopen($image['tmp_name'][$i], "r");
-            $photoname = uniqid().'.jpg';
-            $filename = \Yii::getAlias('@webroot') . '/uploads/'. $photoname;
-            $fp = fopen($filename, "w");
-            while ($data = fread($putdata, 1024))
-            fwrite($fp, $data);       
-            fclose($fp);
-            fclose($putdata);
-            $path = \yii\helpers\Url::to(['/uploads'], true).'/'.$photoname;
+            $file_name = uniqid().'.jpg';   
+            $temp_file_location = $image['tmp_name'][$i]; 
+            User::s3Upload('user/', $file_name, $temp_file_location);
             $im = new Images();
             $im->user_id = \Yii::$app->user->id; 
             $im->avator = 0;
             $im->created_at = time();
-            $im->path = $path;
+            $im->path = env('AWS_S3_PLUZO').'user/'.$file_name;
             $im->sort = 0;
             $im->save();
         }
-        
-        
-        
     }
 
     public function getExpiredat()
@@ -179,8 +171,8 @@ class User extends ActiveRecord
         'region' => 'us-east-1',
         'version' => 'latest',
         'credentials' => [
-            'key'    => 'AKIARQV6Y3IO6M6PO4FQ',
-            'secret' => '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',
+            'key'    => env('AWS_KEY'),
+            'secret' => env('AWS_SECRET'),
         ]
         ]);
 
@@ -195,6 +187,26 @@ class User extends ActiveRecord
                 'PhoneNumber' => $phone,
             ]);
        
+    }
+
+    public static function s3Upload($catalog, $file_name, $temp_file_location){
+            $s3Client = new S3Client([
+                'region' => 'us-east-2',
+                'version' => '2006-03-01',
+                'credentials' => [
+                        'key'    => env('AWS_KEY'),
+                        'secret' => env('AWS_SECRET'),
+                    ],
+            ]);
+            $result = $s3Client->putObject(
+                array(
+                    'Bucket'=>'pluzo',
+                    'Key'    => $catalog.$file_name,
+                    'SourceFile' => $temp_file_location,
+                    'ACL' => 'public-read',
+                    'ContentType' => 'image',
+                )
+            );
     }
 
     public static function socket($user, $data, $action){
