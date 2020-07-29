@@ -133,14 +133,14 @@ class Chat extends \yii\db\ActiveRecord
             $message->image = env('AWS_S3_PLUZO').'user/'.$file_name;
         }
         $message->save();
-        $result = Chat::getMessagers($message->chat_id);
+        $result = Chat::getMessagers($message->chat_id, $message->id);
         User::socket($request->post('send_to'), (array)$result, 'Chat');
         return $result;
     }
 
-    public static function getMessagers($chat_id)
+    public static function getMessagers($chat_id, $message_id)
     {   
-        $result = Message::find()->where(['chat_id'=>$chat_id])->orderby('created_at DESC')->all();
+        $result = Message::find()->where(['id'=>$message_id])->orderby('created_at DESC')->all();
         $result = ArrayHelper::toArray($result, [
             'api\models\Message' => [
                 'id',
@@ -148,6 +148,7 @@ class Chat extends \yii\db\ActiveRecord
                 'created_at',
                 'image',
                 'chat_id',
+                'status',
                 'user' => 'user_info',
             ],
         ]);

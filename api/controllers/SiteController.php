@@ -311,7 +311,7 @@ class SiteController extends Controller
             $file_name = uniqid().'.jpg';   
             $temp_file_location = $_FILES['image']['tmp_name']; 
             User::s3Upload('user/', $file_name, $temp_file_location);
-            $user->image = env('AWS_S3_PLUZO').'user/'.$file_name;
+            $model->image = env('AWS_S3_PLUZO').'user/'.$file_name;
         }
         if ($model->save()) {
             

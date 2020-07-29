@@ -111,6 +111,8 @@ return [
                 'friend-requests-my' => 'friend/friend-requests-my',
                 'friend-requests-to-me' => 'friend/friend-requests-to-me',
                 'add-friend-username' => 'friend/add-friend-username',
+                'stream-start' => 'stream/stream-start',
+                'stream-list' => 'stream/stream-list',
 
             ],
         ],

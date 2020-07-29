@@ -34,6 +34,12 @@ class ChatMessage extends \yii\db\ActiveRecord
         if(!$chats){
             throw new \yii\web\HttpException('500','You not have this chat_id'); 
         }
+
+        //read message
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("UPDATE `message` SET `status`=1 WHERE `chat_id`=".$request->post('chat_id')." AND `user_id`<>".\Yii::$app->user->id);
+        $result = $command->execute(); 
+
         $result = ChatMessage::find()->select('chat_id')->where(['chat_id'=>$request->post('chat_id')])->one();
         return $result;
     }
