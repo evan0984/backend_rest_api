@@ -50,6 +50,10 @@ class LikeController extends Controller
         return Like::swipe();
     }
 
+    public function actionSwipeSearch() {
+        $request = Yii::$app->request;
+        return Like::swipeSearch($request);
+    }
     
 
 }

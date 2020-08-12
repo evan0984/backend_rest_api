@@ -2,7 +2,7 @@
 
 namespace common\models\query;
 
-use common\models\User;
+use common\models\Client;
 use yii\db\ActiveQuery;
 
 /**
@@ -17,7 +17,7 @@ class UserQuery extends ActiveQuery
      */
     public function notDeleted()
     {
-        $this->andWhere(['!=', 'status', User::STATUS_DELETED]);
+        $this->andWhere(['!=', 'status', Client::STATUS_DELETED]);
         return $this;
     }
 
@@ -26,7 +26,7 @@ class UserQuery extends ActiveQuery
      */
     public function active()
     {
-        $this->andWhere(['status' => User::STATUS_ACTIVE]);
+        $this->andWhere(['status' => Client::STATUS_ACTIVE]);
         return $this;
     }
 }

@@ -34,6 +34,12 @@ class StreamController extends Controller
         if(!$_POST['channel_id']){
             throw new \yii\web\HttpException('500','channel_id cannot be blank.'); 
         }
+        if(!isset($_POST['category'])){
+            throw new \yii\web\HttpException('500','category cannot be blank.'); 
+        }
+        if(!isset($_POST['name'])){
+            throw new \yii\web\HttpException('500','name cannot be blank.'); 
+        }
         $check = Stream::find()->where(['channel'=>$_POST['channel_id']])->one();
         if ($check) {
             throw new \yii\web\HttpException('500','Stream channel already exist!'); 
@@ -42,6 +48,8 @@ class StreamController extends Controller
         $stream->user_id = \Yii::$app->user->id;
         $stream->created_at = time();
         $stream->channel = $_POST['channel_id'];
+        $stream->category = $_POST['category'];
+        $stream->name = $_POST['name'];
         if ($stream->save()) {
             return $stream;
         } else {

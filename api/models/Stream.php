@@ -71,7 +71,9 @@ class Stream extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'id',
-            'channel' => 'channel',  
+            'channel' => 'channel', 
+            'category' => 'category', 
+            'name' => 'name', 
             'user' => 'user', 
             'count' => 'count',  
         ];

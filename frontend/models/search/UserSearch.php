@@ -4,12 +4,12 @@ namespace frontend\models\search;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use common\models\User;
+use common\models\Client;
 
 /**
  * UserSearch represents the model behind the search form of `common\models\User`.
  */
-class UserSearch extends User
+class UserSearch extends Client
 {
     /**
      * {@inheritdoc}
@@ -40,7 +40,7 @@ class UserSearch extends User
      */
     public function search($params)
     {
-        $query = User::find();
+        $query = Client::find();
 
 
         // add conditions that should always apply here
@@ -86,7 +86,6 @@ class UserSearch extends User
             ->andFilterWhere(['like', 'login_sms_code_exp', $this->login_sms_code_exp])
             ->andFilterWhere(['like', 'reset_pass_code', $this->reset_pass_code])
             ->andFilterWhere(['like', 'verify_sms_code', $this->verify_sms_code])
-            ->andFilterWhere(['>', 'id', 3])
             ->andFilterWhere(['like', 'birthday', $this->birthday]);
 
         return $dataProvider;

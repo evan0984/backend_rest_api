@@ -75,7 +75,7 @@ class Chat extends \yii\db\ActiveRecord
         $id = \Yii::$app->user->id;
         $connection = Yii::$app->getDb();
         $command = $connection->createCommand("SELECT ".User::userFields().", `message`.`text`, `message`.`chat_id`, `message`.`created_at` FROM `message`
-            LEFT JOIN `user` ON `user`.`id` = `message`.`user_id`
+            LEFT JOIN `client` ON `client`.`id` = `message`.`user_id`
             WHERE `message`.`user_id` <> ".\Yii::$app->user->id." AND `message`.`text` Like '%".$request."%' AND `message`.`chat_id` IN ('".$array."')");
         $result = $command->queryAll();
         return $result;
@@ -129,8 +129,8 @@ class Chat extends \yii\db\ActiveRecord
         if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
             $file_name = uniqid().'.jpg';   
             $temp_file_location = $_FILES['image']['tmp_name']; 
-            User::s3Upload('user/', $file_name, $temp_file_location);
-            $message->image = env('AWS_S3_PLUZO').'user/'.$file_name;
+            User::s3Upload('chat/', $file_name, $temp_file_location);
+            $message->image = env('AWS_S3_PLUZO').'chat/'.$file_name;
         }
         $message->save();
         $result = Chat::getMessagers($message->chat_id, $message->id);
@@ -166,8 +166,8 @@ class Chat extends \yii\db\ActiveRecord
             if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
                 $file_name = uniqid().'.jpg';   
                 $temp_file_location = $_FILES['image']['tmp_name']; 
-                User::s3Upload('user/', $file_name, $temp_file_location);
-                $msg->image = env('AWS_S3_PLUZO').'user/'.$file_name;
+                User::s3Upload('chat/', $file_name, $temp_file_location);
+                $msg->image = env('AWS_S3_PLUZO').'chat/'.$file_name;
             }
             if ($msg->save()) {
                 return Message::find()->where(['chat_id'=>$msg->chat_id])->orderby('created_at DESC')->all();

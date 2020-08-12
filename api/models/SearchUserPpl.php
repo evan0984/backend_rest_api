@@ -22,7 +22,7 @@ class SearchUserPpl extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return '{{%client}}';
     }
 
     /**

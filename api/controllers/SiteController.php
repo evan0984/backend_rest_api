@@ -15,6 +15,7 @@ use common\models\Token;
 use yii\filters\auth\HttpBearerAuth;
 use yii\helpers\Url;
 
+
 class SiteController extends Controller
 {   
 
@@ -24,7 +25,7 @@ class SiteController extends Controller
 
         $behaviors['authenticator'] = [
             'class' =>  HttpBearerAuth::className(),
-            'except' => ['sms', 'login', 'signup', 'forgot-sms-send', 'forgot-sms-code', 'new-pass-code', 'verify-sms-send', 'verify-sms-code', 'login-sms-send', 'login-sms-code']
+            'except' => ['login-sms', 'check-number', 'index','check-username', 'sms', 'login', 'signup', 'forgot-sms-send', 'forgot-sms-code', 'new-pass-code', 'verify-sms-send', 'verify-sms-code', 'login-sms-send', 'login-sms-code']
         ];
 
         return $behaviors;
@@ -46,6 +47,34 @@ class SiteController extends Controller
         ];
     }
 
+
+    public function actionDeleteAccount()
+    {
+        User::deleteAccount();
+        return 'Account deleted';
+    }  
+    
+    public function actionSortImage()
+    {   
+        $array = $_POST['sort'];
+        if(count($array) < 1){
+            throw new \yii\web\HttpException('500','sorrt cannot be < 1'); 
+        }
+        if (!is_array($_POST['sort'])) {
+            throw new \yii\web\HttpException('500','sort must be array sort[25]=0 '); 
+        }
+        foreach ($array as $key => $value) {
+            $image = Images::find()->where(['user_id'=>\Yii::$app->user->id, 'id'=>$key])->one();
+            if($image){
+                $image->sort = $value;
+                $image->save();
+            }
+        }
+        User::setAvatar();
+        return User::find()->where(['id'=>\Yii::$app->user->id])->one();
+
+    }
+
     public function actionGetUserInfo()
     {   
         if(!$_POST['user_id']){
@@ -60,6 +89,20 @@ class SiteController extends Controller
         
     }
 
+
+    public function actionCheckUsername()
+    { 
+        if(!$_POST['username']){
+            throw new \yii\web\HttpException('500','username cannot be blank.'); 
+        }
+        $user = User::find()->where(['username'=>$_POST['username']])->one();
+        if ($user) {
+            throw new \yii\web\HttpException('500','username is not available.'); 
+        } else {
+            return 'username is available';
+        }
+    }
+
     public function actionForgotSmsSend()
     {      
         if(!$_POST['phone']){
@@ -72,7 +115,10 @@ class SiteController extends Controller
             $user->forgot_sms_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
             $user->forgot_sms_code_exp = time()+3600;
             if ($user->save()) {
-                User::Sms($_POST['phone'], $user->forgot_sms_code);
+                $message = 'Your app code is: '.$user->forgot_sms_code.'
+
+'.env('SMS_HASH');
+                User::Sms($_POST['phone'], $message);
                 return 'Code sent to '.str_replace(' ', '', $_POST['phone']).'!';
             }
         }
@@ -120,7 +166,8 @@ class SiteController extends Controller
             $token->generateToken(time() + 3600 * 24 * 365);
             $token->save();
             if ($user->save()) {
-                return $user;
+                $us = User::find()->where(['id'=>$user->id])->one();
+                return $us;
             }
         }
         throw new \yii\web\HttpException('500','User with this pass_code not found!');
@@ -137,7 +184,10 @@ class SiteController extends Controller
             $digits = 4;
             $user->verify_sms_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
             if ($user->save()) {
-                User::Sms($_POST['phone'], $user->verify_sms_code);
+                $message = 'Your app code is: '.$user->verify_sms_code.'
+
+'.env('SMS_HASH');
+                User::Sms($_POST['phone'], $message);
                 return 'Verify code sent to '.$_POST['phone'].'!';
             }
         }
@@ -172,16 +222,30 @@ class SiteController extends Controller
         if(!$_POST['image_id']){
             throw new \yii\web\HttpException('500','image_id cannot be blank.'); 
         }
-        $im = Images::find()->where(['id'=>$_POST['image_id']])->one();
+        $im = Images::find()->where(['id'=>$_POST['image_id'], 'user_id'=>\Yii::$app->user->id])->one();
         if ($im) {
             \Yii::$app
             ->db
             ->createCommand()
             ->delete('images', ['id' => $im->id])
             ->execute();
+            User::setAvatar();
             return 'Image deleted!';
         } else {
             throw new \yii\web\HttpException('500','Image with id = '.$_POST['image_id'].' not exist');
+        }
+    }
+
+    public function actionCheckNumber()
+    { 
+        if(!$_POST['phone']){
+            throw new \yii\web\HttpException('500','phone cannot be blank.'); 
+        }
+        $user = UserMsg::find()->where(['phone'=>str_replace(' ', '', $_POST['phone'])])->one();
+        if ($user) {
+            return $user->phone;
+        } else {
+            throw new \yii\web\HttpException('500','User with this number not found!'); 
         }
     }
 
@@ -195,7 +259,10 @@ class SiteController extends Controller
             $digits = 4;
             $user->login_sms_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
             if ($user->save()) {
-                User::Sms($_POST['phone'], $user->login_sms_code);
+                $message = 'Your app code is: '.$user->login_sms_code.'
+
+'.env('SMS_HASH');
+                User::Sms($_POST['phone'], $message);
                 return 'Verify code sent to '.str_replace(' ', '', $_POST['phone']).'!';
             }
         }
@@ -226,7 +293,7 @@ class SiteController extends Controller
     
 
     public function actionIndex()
-    {
+    {   
         return 'api';
     }
 
@@ -262,25 +329,17 @@ class SiteController extends Controller
         if (isset($_POST['first_name'])) { $user->first_name = $_POST['first_name']; }
         if (isset($_POST['last_name'])) { $user->last_name = $_POST['last_name']; }
         if (isset($_POST['password'])) { $user->password_hash = Yii::$app->security->generatePasswordHash($_POST['password']); }
-        if( count($_FILES)>0 AND $_FILES['image']['tmp_name'] ) {
-            $file_name = uniqid().'.jpg';   
-            $temp_file_location = $_FILES['image']['tmp_name']; 
-            User::s3Upload('user/', $file_name, $temp_file_location);
-            $user->image = env('AWS_S3_PLUZO').'user/'.$file_name;
-        }
-
         if( count($_FILES['images'])>0 AND $_FILES['images']['tmp_name'] ) {
             User::savePhoto((array)$_FILES['images']);
+            User::setAvatar();
         }
-        
-
         if (isset($_POST['latitude']) AND isset($_POST['longitude'])) {
             $lat = $_POST['latitude'];
             $long = $_POST['longitude'];
             $user->address = User::getAddress($lat, $long);
         }
         $user->save();
-        return $user;
+        return User::findOne($user->id);
     }   
 
     public function actionSignup()
@@ -312,9 +371,18 @@ class SiteController extends Controller
             $temp_file_location = $_FILES['image']['tmp_name']; 
             User::s3Upload('user/', $file_name, $temp_file_location);
             $model->image = env('AWS_S3_PLUZO').'user/'.$file_name;
+
         }
         if ($model->save()) {
-            
+            if( $model->image ) {
+                $im = new Images();
+                $im->user_id = $model->id; 
+                $im->avator = 0;
+                $im->created_at = time();
+                $im->path = $model->image;
+                $im->sort = 0;
+                $im->save();
+            }
             $token = new Token();
             $token->user_id = $model->id;
             $token->generateToken(time() + 3600 * 24 * 365);

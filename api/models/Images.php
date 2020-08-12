@@ -45,6 +45,7 @@ class Images extends \yii\db\ActiveRecord
         return [
             'id' => 'id',
             'path' => 'path',  
+            'sort' => 'sort',
         ];
     }
 }

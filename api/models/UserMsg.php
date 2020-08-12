@@ -22,7 +22,7 @@ class UserMsg extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return '{{%client}}';
     }
 
     /**
@@ -41,8 +41,8 @@ class UserMsg extends ActiveRecord
     public function rules()
     {
         return [
-            ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This username has already been taken.', 'on'=>'create'],
-            ['phone', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This phone number has already been taken.', 'on'=>'create'],
+            ['username', 'unique', 'targetClass' => '\common\models\Client', 'message' => 'This username has already been taken.', 'on'=>'create'],
+            ['phone', 'unique', 'targetClass' => '\common\models\Client', 'message' => 'This phone number has already been taken.', 'on'=>'create'],
             [['username', 'email', 'phone'], 'required', 'on'=>'create'],
             ['status', 'integer'],
             [['password','gender', 'first_name', 'last_name', 'phone', 'username', 'email'], 'safe'],
@@ -84,8 +84,10 @@ class UserMsg extends ActiveRecord
     }
     public function getImages()
     {   
-        return $this->hasMany(Images::className(), ['user_id' => 'id']);        
+        return $this->hasMany(Images::className(), ['user_id' => 'id'])->
+        orderBy(['sort' => SORT_ASC]);               
     }
+
 
    
 }   

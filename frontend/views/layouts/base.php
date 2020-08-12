@@ -66,7 +66,8 @@ $keyStorage = Yii::$app->keyStorage;
         ]); ?>
         <!-- /left navbar links -->
 
-        <!-- right navbar links -->
+        <!-- right navbar links   '.Html::img(Yii::$app->user->identity->userProfile->getAvatar('/img/anonymous.png'), ['class' => ['img-circle', 'elevation-2', 'bg-white', 'user-image'], 'alt' => 'User image']).'
+                        '.Html::tag('span', Yii::$app->user->identity->publicIdentity, ['class' => ['d-none', 'd-md-inline']]).' -->
         <?php echo Nav::widget([
             'options' => ['class' => ['navbar-nav', 'ml-auto']],
             'encodeLabels' => false,
@@ -74,8 +75,7 @@ $keyStorage = Yii::$app->keyStorage;
                 
                 '<li class="nav-item dropdown user-menu">
                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                        '.Html::img(Yii::$app->user->identity->userProfile->getAvatar('/img/anonymous.png'), ['class' => ['img-circle', 'elevation-2', 'bg-white', 'user-image'], 'alt' => 'User image']).'
-                        '.Html::tag('span', Yii::$app->user->identity->publicIdentity, ['class' => ['d-none', 'd-md-inline']]).'
+                     
                     </a>
                     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                         <!-- User image -->
@@ -121,10 +121,7 @@ $keyStorage = Yii::$app->keyStorage;
             <!-- sidebar user panel -->
             <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                 <div class="image">
-                    <?php echo Html::img(
-                        Yii::$app->user->identity->userProfile->getAvatar('/img/anonymous.png'),
-                        ['class' => ['img-circle', 'elevation-2', 'bg-white'], 'alt' => 'User image']
-                    ) ?>
+                    <img class="img-circle elevation-2 bg-white" src="https://dashboard.pluzo.com/0WLfykrhlA5Xsp1vcNZdx8pt_1xGC555.png" alt="User image">
                 </div>
                 <div class="info">
                     <a href="#" class="d-block"><?php echo Yii::$app->user->identity->publicIdentity ?></a>

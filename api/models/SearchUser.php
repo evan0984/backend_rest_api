@@ -22,7 +22,7 @@ class SearchUser extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return '{{%client}}';
     }
 
     /**
@@ -77,9 +77,9 @@ class SearchUser extends ActiveRecord
     public function getSearch($request)
     {   
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand("SELECT `user`.`id` FROM `friend` l1 
+        $command = $connection->createCommand("SELECT `client`.`id` FROM `friend` l1 
             INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".\Yii::$app->user->id);
         $result = $command->queryAll();
         $ar = [];

@@ -4,6 +4,7 @@ namespace api\models;
 
 use Yii;
 use api\models\Like;
+use api\components\DistanceHelper;
 /**
  * This is the model class for table "like".
  *
@@ -116,7 +117,7 @@ class Like extends \yii\db\ActiveRecord
         $connection = Yii::$app->getDb();
         $command = $connection->createCommand("SELECT l2.user_source_id, ".User::userFields()." FROM `like` l1 
             INNER JOIN `like` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".\Yii::$app->user->id." AND (l1.like = 1 OR l2.like = 1 OR l2.like = 2 OR l2.like = 2)  AND (l1.like <> 0 AND l2.like <> 0)");
         $result = $command->queryAll();
         return 
@@ -125,6 +126,70 @@ class Like extends \yii\db\ActiveRecord
             'like_info' => Like::getLikeInfo(),
         ]; 
 
+    }
+
+    public function swipeSearch($request)
+    {   
+        if(!$request->post('latitude')){
+            throw new \yii\web\HttpException('500','latitude cannot be blank.'); 
+        }
+        if(!$request->post('longitude')){
+            throw new \yii\web\HttpException('500','longitude cannot be blank.'); 
+        }
+        if(!$request->post('gender')){
+            throw new \yii\web\HttpException('500','gender cannot be blank.'); 
+        }
+        if(!$request->post('age_from')){
+            throw new \yii\web\HttpException('500','age_from cannot be blank.'); 
+        }
+        if(!$request->post('age_to')){
+            throw new \yii\web\HttpException('500','age_to cannot be blank.'); 
+        }
+        $lat = $request->post('latitude');
+        $lon = $request->post('longitude');
+        $gender = $request->post('gender');
+        $age_from = $request->post('age_from');
+        $age_to = $request->post('age_to');
+
+        $id = \Yii::$app->user->id;
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("SELECT *, YEAR(CURRENT_TIMESTAMP)-FROM_UNIXTIME(`birthday`, '%Y') AS `age`, ".DistanceHelper::distance($lat, $lon)." AS `distance` FROM user WHERE `gender`=".$gender." HAVING `distance` < 100 AND `age`>=".$age_from." AND `age`<=".$age_to);      
+
+        $result = $command->queryAll();
+
+        $ar1 = [];
+        foreach ($result as $key => $value) {
+            array_push($ar1, $value['id']);
+        }
+
+        $distance = [];
+        foreach ($result as $key => $value) {
+            array_push($distance, [$value['id']=>$value['distance']]);
+        }
+
+        $like = Like::find()->select('user_target_id')->where(['user_source_id'=>\Yii::$app->user->id])->asArray()->all();
+        $ar2 = [];
+        foreach ($like as $key => $value) {
+            array_push($ar2, $value['user_target_id']);
+        }
+        $swipe = User::find()
+        ->where(['<>','id', \Yii::$app->user->id])
+        ->andWhere(['in', 'id', $ar1])
+        ->andWhere(['not in', 'id', $ar2])
+        ->orderBy([
+        'id' => SORT_DESC     
+        ])
+        ->all();  
+        return 
+        [    
+            'swipe' => $swipe,
+            'distance'=>$distance,
+            'like_info' => Like::getLikeInfo(),
+        ];
+
+
+
+        //return $result;
     }
 
     public function swipe()

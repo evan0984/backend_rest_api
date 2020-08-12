@@ -31,7 +31,7 @@ use yii\web\IdentityInterface;
  *
  * @property \common\models\UserProfile $userProfile
  */
-class User extends ActiveRecord implements IdentityInterface
+class Client extends ActiveRecord implements IdentityInterface
 {
     const STATUS_NOT_ACTIVE = 1;
     const STATUS_ACTIVE = 2;
@@ -49,7 +49,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return '{{%client}}';
     }
 
     /**
@@ -100,7 +100,7 @@ class User extends ActiveRecord implements IdentityInterface
             ->andWhere(['>', 't.expired_at', time()])
             ->one();
         if($result){
-            $query = "UPDATE `user` SET `last_activity`=".time()." WHERE `id`=".$result->id;
+            $query = "UPDATE `client` SET `last_activity`=".time()." WHERE `id`=".$result->id;
             $connection = Yii::$app->getDb();
             $command = $connection->createCommand($query)->execute();
         }

@@ -3,7 +3,7 @@
 namespace frontend\controllers;
 
 use Yii;
-use common\models\User;
+use common\models\Client;
 use frontend\models\search\UserSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -64,7 +64,7 @@ class UsersController extends Controller
      */
     public function actionCreate()
     {
-        $model = new User();
+        $model = new Client();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -84,9 +84,6 @@ class UsersController extends Controller
      */
     public function actionUpdate($id)
     {   
-        if ($id < 4) {
-            die();
-        }
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
@@ -109,6 +106,67 @@ class UsersController extends Controller
     {
         $this->findModel($id)->delete();
 
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('images', ['user_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('chat', ['user_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('friend', ['user_source_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('friend', ['user_target_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('like', ['user_source_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('like', ['user_target_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('message', ['user_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('party', ['user_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('stream', ['user_id' => $id])
+            ->execute();
+
+        \Yii::$app
+            ->db
+            ->createCommand()
+            ->delete('stream_user', ['user_id' => $id])
+            ->execute();
+
+
         return $this->redirect(['index']);
     }
 
@@ -121,7 +179,7 @@ class UsersController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = User::findOne($id)) !== null) {
+        if (($model = Client::findOne($id)) !== null) {
             return $model;
         }
 

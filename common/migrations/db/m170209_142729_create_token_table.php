@@ -17,10 +17,6 @@ class m170209_142729_create_token_table extends Migration
             'token' => $this->string()->notNull()->unique(),
             'expired_at' => $this->integer()->notNull(),
         ], $tableOptions);
-
-        $this->createIndex('idx-token-user_id', '{{%token}}', 'user_id');
-
-        $this->addForeignKey('fk-token-user_id', '{{%token}}', 'user_id', '{{%user}}', 'id', 'CASCADE', 'RESTRICT');
     }
 
     public function down()

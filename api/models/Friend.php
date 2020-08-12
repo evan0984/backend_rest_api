@@ -41,8 +41,8 @@ class Friend extends \yii\db\ActiveRecord
         $connection = Yii::$app->getDb();
         $command = $connection->createCommand("SELECT ".User::userFields()." FROM `friend` l1 
             INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
-            WHERE l1.user_source_id = ".\Yii::$app->user->id." AND `user`.`username` Like '%".$request."%'");
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
+            WHERE l1.user_source_id = ".\Yii::$app->user->id." AND `client`.`username` Like '%".$request."%'");
         $result = $command->queryAll();
         return $result;
     }
@@ -97,9 +97,9 @@ class Friend extends \yii\db\ActiveRecord
     {   
         $id = \Yii::$app->user->id;
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand("SELECT `user`.`id` FROM `friend` l1 
+        $command = $connection->createCommand("SELECT `client`.`id` FROM `friend` l1 
             INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".\Yii::$app->user->id);
         $result = $command->queryAll();
         $ar = [];
@@ -115,9 +115,9 @@ class Friend extends \yii\db\ActiveRecord
     {   
         $id = \Yii::$app->user->id;
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand("SELECT `user`.`id` FROM `friend` l1 
+        $command = $connection->createCommand("SELECT `client`.`id` FROM `friend` l1 
             INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".\Yii::$app->user->id);
         $result = $command->queryAll();
         $ar = [];
@@ -140,7 +140,7 @@ class Friend extends \yii\db\ActiveRecord
         $connection = Yii::$app->getDb();
         $command = $connection->createCommand("SELECT ".User::userFields()." FROM `friend` l1 
             INNER JOIN `friend` l2 ON l1.user_source_id = l2.user_target_id AND l2.user_source_id = l1.user_target_id 
-            LEFT JOIN `user` ON `user`.`id` = l2.user_source_id
+            LEFT JOIN `client` ON `client`.`id` = l2.user_source_id
             WHERE l1.user_source_id = ".$id);
         $result = $command->queryAll();
         $friend = [];
